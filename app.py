@@ -1,55 +1,84 @@
-from flask import Flask, request, render_template
+from flask import Flask, render_template, request
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# Load and process data
-file_path = 'D:/AIML_PROJECT/DistrictwiseSLLCrimes.csv'
-data = pd.read_csv(file_path)
-rajasthan_data = data[data['state_name'] == 'Rajasthan']
-bharatpur_data = rajasthan_data[rajasthan_data['district_name'] == 'Bharatpur']
+# Load and preprocess the data
+file_path = 'C:/Users/ishaj/Sem2_Project/DistrictwiseSLLCrimes.csv'
 
-# Preprocess for model
-scaler = StandardScaler()
-bharatpur_data_scaled = scaler.fit_transform(bharatpur_data[['total_cognizable_sll_crimes', 'crime_against_women_total']])
+def preprocess_data():
+    df = pd.read_csv(file_path)
+    
+    # Convert year column to numeric (extract only year)
+    df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
+    df.dropna(subset=['year'], inplace=True)
+    
+    # Columns to be converted to numeric
+    cols_to_convert = [
+        'crime_against_women_total',
+        'juvenile_justice_care_and_protection_of_children',
+        'prohibition_of_child_marriage',
+        'sc_and_st_related_crimes',
+        'prevention_of_damage_to_public_property',
+        'arms_total',
+        'explosives_and_explosive_substances',
+        'information_technology_or_intellectual_property_total',
+        'prohibition_state',
+        'excise',
+        'ndps_total',
+        'forest_act_1927_and_the_forest_conservation',
+        'foreigner_and_passport_related_total',
+        'food_drugs_and_essential_commodities_total',
+        'gambling',
+        'electricity',
+        'other_sll_crimes'
+    ]
+    
+    # Convert columns to numeric
+    for col in cols_to_convert:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df.fillna(0, inplace=True)  # Fill NaN values with 0
+    return df, cols_to_convert
 
-X = bharatpur_data[['total_cognizable_sll_crimes', 'crime_against_women_total']]
-y = bharatpur_data['total_cognizable_sll_crimes']
+df, cols_to_convert = preprocess_data()
 
-# Train Random Forest model
-rf = RandomForestRegressor(n_estimators=100, random_state=42)
-rf.fit(X, y)
-
-# Route for prediction page
 @app.route('/')
 def index():
-    return render_template('index.html')
+    states = df['state_name'].unique()
+    state_districts = {
+        state: df[df['state_name'] == state]['district_name'].unique().tolist()
+        for state in states
+    }
+    return render_template('index.html', states=states, state_districts=state_districts)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    year = request.form['year']
+    state = request.form['state']
     district = request.form['district']
+    future_years = int(request.form['years'])  # Number of future years for prediction
     
-    # Simulated predictions (replace these with actual prediction logic)
-    predictions = {
-        'crime_women': 150,
-        'gambling': 30,
-        'child_marriage': 5,
-        'juvenile_justice': 10,
-        'it_ip_crimes': 20
-    }
-
-    return render_template(
-        'index.html', 
-        prediction_crime_women=f"Predicted {predictions['crime_women']} cases",
-        prediction_gambling=f"Predicted {predictions['gambling']} cases",
-        prediction_child_marriage=f"Predicted {predictions['child_marriage']} cases",
-        prediction_juvenile_justice=f"Predicted {predictions['juvenile_justice']} cases",
-        prediction_it_ip_crimes=f"Predicted {predictions['it_ip_crimes']} cases"
-    )
+    # Filter the data for the selected state and district
+    df_filtered = df[(df['state_name'] == state) & (df['district_name'] == district)]
+    
+    if df_filtered.empty:
+        return "No data available for this state and district combination"
+    
+    # Linear Regression to predict future crime numbers
+    X = df_filtered[['year'] + cols_to_convert]
+    y = df_filtered['total_cognizable_sll_crimes']
+    
+    model = LinearRegression()
+    model.fit(X, y)
+    
+    # Predict starting from the year 2025
+    future_start_year = 2025
+    future_year = future_start_year + future_years - 1  # Calculate the future year based on input
+    future_X = [[future_year] + [df_filtered[col].mean() for col in cols_to_convert]]  # Use mean values for other features
+    predicted_crime_future_year = model.predict(future_X)
+    
+    return f"Predicted crime for {district} in {future_year}: {predicted_crime_future_year[0]}"
 
 if __name__ == '__main__':
     app.run(debug=True)
