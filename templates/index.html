@@ -2,134 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crime Prediction App</title>
+    <title>Crime Prediction</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f3f6f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
         }
-
         .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
             text-align: center;
-            border: 1px solid #cfd8dc;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
         }
-
-        h1 {
-            color: #1e88e5;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        label {
-            font-weight: bold;
-            color: #455a64;
-            text-align: left;
-        }
-
-        input[type="text"], input[type="number"] {
+        select, input[type="submit"], input[type="number"] {
+            width: 80%;
             padding: 10px;
+            margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
-            width: 100%;
-            box-sizing: border-box;
         }
-
         input[type="submit"] {
-            background-color: #1976d2;
+            background-color: #4CAF50;
             color: white;
-            padding: 12px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
         }
-
         input[type="submit"]:hover {
-            background-color: #1565c0;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e3f2fd;
-            border: 1px solid #bbdefb;
-            border-radius: 5px;
-            display: none; /* Hidden by default */
-        }
-
-        .result p {
-            margin: 8px 0;
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Crime Prediction for Bharatpur District</h1>
+        <h2>Crime Prediction</h2>
         <form action="/predict" method="POST">
-            <label for="year">Enter Year:</label>
-            <input type="number" id="year" name="year" placeholder="Enter year (e.g., 2025)" required>
+            <label for="state">Select State:</label><br>
+            <select name="state" id="state" required onchange="fetchDistricts(this.value)">
+                <option value="">--Select State--</option>
+                {% for state in states %}
+                    <option value="{{ state }}">{{ state }}</option>
+                {% endfor %}
+            </select><br>
 
-            <label for="district">Enter District Name:</label>
-            <input type="text" id="district" name="district" placeholder="Enter district name (e.g., Bharatpur)" required>
+            <label for="district">Select District:</label><br>
+            <select name="district" id="district" required>
+                <option value="">--Select District--</option>
+            </select><br>
 
-            <input type="submit" value="Predict">
+            <label for="years">Number of years from 2025 to predict:</label><br>
+            <input type="number" name="years" id="years" required min="1" max="10" placeholder="Enter years from 2025"><br>
+
+            <input type="submit" value="Predict Crime">
         </form>
-
-        <div class="result" id="result">
-            <p><strong>Crime Against Women:</strong> <span id="crime_women"></span></p>
-            <p><strong>Gambling:</strong> <span id="gambling"></span></p>
-            <p><strong>Prohibition of Child Marriage:</strong> <span id="child_marriage"></span></p>
-            <p><strong>Juvenile Justice:</strong> <span id="juvenile_justice"></span></p>
-            <p><strong>IT and Intellectual Property Crimes:</strong> <span id="it_ip_crimes"></span></p>
-        </div>
     </div>
 
     <script>
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent form submission for demo purposes
+        const stateDistrictData = {{ state_districts | tojson }};
 
-            const year = document.getElementById('year').value;
-            const district = document.getElementById('district').value;
-
-            // Simulate prediction results (you will replace this with actual backend predictions)
-            const predictions = {
-                crime_women: `Predicted 150 cases in ${district} for ${year}`,
-                gambling: `Predicted 30 cases in ${district} for ${year}`,
-                child_marriage: `Predicted 5 cases in ${district} for ${year}`,
-                juvenile_justice: `Predicted 10 cases in ${district} for ${year}`,
-                it_ip_crimes: `Predicted 20 cases in ${district} for ${year}`,
-            };
-
-            // Display results
-            document.getElementById('crime_women').textContent = predictions.crime_women;
-            document.getElementById('gambling').textContent = predictions.gambling;
-            document.getElementById('child_marriage').textContent = predictions.child_marriage;
-            document.getElementById('juvenile_justice').textContent = predictions.juvenile_justice;
-            document.getElementById('it_ip_crimes').textContent = predictions.it_ip_crimes;
-
-            document.getElementById('result').style.display = 'block';
-        });
+        function fetchDistricts(state) {
+            const districtSelect = document.getElementById("district");
+            districtSelect.innerHTML = '<option value="">--Select District--</option>';
+            if (stateDistrictData[state]) {
+                stateDistrictData[state].forEach(district => {
+                    const option = document.createElement("option");
+                    option.value = district;
+                    option.text = district;
+                    districtSelect.add(option);
+                });
+            }
+        }
     </script>
 </body>
 </html>
