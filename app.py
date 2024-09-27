@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 
 app = Flask(__name__)
 
@@ -65,20 +65,28 @@ def predict():
     if df_filtered.empty:
         return "No data available for this state and district combination"
     
-    # Linear Regression to predict future crime numbers
+    # Use RandomForestRegressor to predict future crime numbers for each column
     X = df_filtered[['year'] + cols_to_convert]
-    y = df_filtered['total_cognizable_sll_crimes']
+    y_columns = cols_to_convert  # Columns to predict
     
-    model = LinearRegression()
-    model.fit(X, y)
+    model = RandomForestRegressor(n_estimators=100)
+    predictions = {}
+
+    for col in y_columns:
+        y = df_filtered[col]
+        model.fit(X, y)
+        future_start_year = 2025
+        future_year = future_start_year + future_years - 1  # Calculate the future year based on input
+        future_X = [[future_year] + [df_filtered[col].mean() for col in cols_to_convert]]  # Use mean values for other features
+        predicted_value = model.predict(future_X)[0]
+        predictions[col] = predicted_value
     
-    # Predict starting from the year 2025
-    future_start_year = 2025
-    future_year = future_start_year + future_years - 1  # Calculate the future year based on input
-    future_X = [[future_year] + [df_filtered[col].mean() for col in cols_to_convert]]  # Use mean values for other features
-    predicted_crime_future_year = model.predict(future_X)
+    # Generate HTML output with <br> for line breaks
+    result = f"<h3>Crime Predictions for {district} in {future_year}:</h3><br>"
+    for crime_type, prediction in predictions.items():
+        result += f"{crime_type.replace('_', ' ').capitalize()}: {prediction:.2f}<br>"
     
-    return f"Predicted crime for {district} in {future_year}: {predicted_crime_future_year[0]}"
+    return result
 
 if __name__ == '__main__':
     app.run(debug=True)
