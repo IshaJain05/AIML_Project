@@ -2,85 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crime Prediction</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background: #f4f6f9;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
+
         .container {
-            text-align: center;
-            background-color: white;
+            width: 420px;
+            background: #ffffff;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            text-align: center;
         }
-        select, input[type="submit"], input[type="number"] {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+
+        h2 {
+            margin-bottom: 25px;
+            color: #1f2937;
         }
+
+        label {
+            display: block;
+            text-align: left;
+            margin: 12px 0 6px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        select,
+        input[type="number"],
         input[type="submit"] {
-            background-color: #4CAF50;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        select,
+        input[type="number"] {
+            background: #fff;
+        }
+
+        input[type="submit"] {
+            margin-top: 20px;
+            background: #16a34a;
             color: white;
             border: none;
+            font-weight: bold;
             cursor: pointer;
+            transition: 0.3s;
         }
+
         input[type="submit"]:hover {
-            background-color: #45a049;
+            background: #15803d;
+        }
+
+        .note {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Crime Prediction</h2>
+
         <form action="/predict" method="POST">
-            <label for="state">Select State:</label><br>
+            <label for="state">Select State</label>
             <select name="state" id="state" required onchange="fetchDistricts(this.value)">
-                <option value="">--Select State--</option>
+                <option value="">Select State</option>
                 {% for state in states %}
                     <option value="{{ state }}">{{ state }}</option>
                 {% endfor %}
-            </select><br>
+            </select>
 
-            <label for="district">Select District:</label><br>
+            <label for="district">Select District</label>
             <select name="district" id="district" required>
-                <option value="">--Select District--</option>
-            </select><br>
+                <option value="">Select District</option>
+            </select>
 
-            <label for="years">Number of years from 2025 to predict:</label><br>
-            <input type="number" name="years" id="years" required min="1" max="10" placeholder="Enter years from 2025"><br>
+            <label for="years">Number of years from 2025 to predict</label>
+            <input
+                type="number"
+                name="years"
+                id="years"
+                required
+                min="1"
+                max="10"
+                placeholder="Enter years"
+            >
 
             <input type="submit" value="Predict Crime">
         </form>
+
+        <div class="note">
+            Enter a value from 1 to 10
+        </div>
     </div>
 
-    <script>
-        const stateDistrictData = {{ state_districts | tojson }};
+    <script id="state-district-data" type="application/json">
+    {{ state_districts | tojson }}
+</script>
 
-        function fetchDistricts(state) {
-            const districtSelect = document.getElementById("district");
-            districtSelect.innerHTML = '<option value="">--Select District--</option>';
-            if (stateDistrictData[state]) {
-                stateDistrictData[state].forEach(district => {
-                    const option = document.createElement("option");
-                    option.value = district;
-                    option.text = district;
-                    districtSelect.add(option);
-                });
-            }
+<script>
+    const stateDistrictData = JSON.parse(
+        document.getElementById("state-district-data").textContent
+    );
+
+    function fetchDistricts(state) {
+        const districtSelect = document.getElementById("district");
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+
+        if (stateDistrictData[state]) {
+            stateDistrictData[state].forEach(district => {
+                const option = document.createElement("option");
+                option.value = district;
+                option.text = district;
+                districtSelect.add(option);
+            });
         }
-    </script>
+    }
+</script>
 </body>
 </html>
-

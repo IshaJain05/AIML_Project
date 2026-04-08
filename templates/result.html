@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #16a34a;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .total-box {
+            margin-top: 25px;
+            padding: 16px;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #166534;
+            text-align: center;
+        }
+
+        .error {
+            text-align: center;
+            color: #b91c1c;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 25px;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .back-wrap {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% else %}
+            <h2>Crime Predictions for {{ district }}</h2>
+            <div class="subtitle">Predicted year: {{ year }}</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Crime Type</th>
+                        <th>Predicted Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in predictions %}
+                    <tr>
+                        <td>{{ item.crime_type }}</td>
+                        <td>{{ item.predicted_value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                Total Predicted Crime: {{ total_prediction }}
+            </div>
+        {% endif %}
+
+        <div class="back-wrap">
+            <a href="/" class="back-btn">Go Back</a>
+        </div>
+    </div>
+</body>
+</html>
